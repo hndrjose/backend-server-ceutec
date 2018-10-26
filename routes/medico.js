@@ -1,186 +1,166 @@
 var express = require('express');
-var bycrypt = require('bcryptjs');
-
-var jwt = require('jsonwebtoken');
-
-//var SEED = require('../config/config').SEED;
-var mdauntentic = require('../midlewares/autenticacion');
 
 var app = express();
-var Usuario = require('../models/usuario');
-
-
-
+var Medico = require('../models/medico');
+var mdauntentic = require('../midlewares/autenticacion');
 
 //========================================================================
-// OBTENER USUARIOS
+// OBTENER MEDICOS
 //========================================================================
 app.get('/', (req, res, next) => {
 
     var desde = req.query.desde || 0;
     desde = Number(desde);
 
-    Usuario.find({}, 'nombre email img role')
+    Medico.find({}, 'nombre usuario hospital')
+        .populate('usuario', 'nombre email')
+        .populate('hospital')
         .skip(desde)
         .limit(5)
         .exec(
-            (err, usuarios) => {
+            (err, medico) => {
 
                 if (err) {
                     return res.status(500).json({
                         ok: false,
-                        mensaje: 'Error Cargando Usuario',
+                        mensaje: 'Error Cargando Medicos',
                         errors: err
 
                     });
                 }
-
-                Usuario.count({}, (err, conteo) => {
+                Medico.count({}, (err, conteo) => {
                     res.status(300).json({
                         ok: true,
-                        usuarios: usuarios,
+                        medico: medico,
                         total: conteo
+
                     });
                 });
 
-
-
             });
-
 });
 // ====================================================================
-// FIN OBTENER USUARIOS
+// FIN OBTENER MEDICOS
 // ====================================================================
 
-
-
-
-
-
-//========================================================================
-// CREAR NUEVO USUARIO
-// libreria de ayuda: buscar en google 'body parser node'
-// npm install body-parser
-// libreria var bodyParser = require('body-parser')
-//========================================================================
+// ====================================================================
+// CREAR MEDICOS
+// ====================================================================
 app.post('/', mdauntentic.verificatoken, (req, res) => {
 
     var body = req.body;
 
-    var usuario = new Usuario({
+    var medico = new Medico({
         nombre: body.nombre,
-        email: body.email,
-        password: bycrypt.hashSync(body.password, 10),
-        img: body.img,
-        role: body.role
+        usuario: req.usuario._id,
+        hospital: body.hospital
     });
 
-    usuario.save((err, usuarioguardado) => {
+    medico.save((err, medicoguardado) => {
         if (err) {
             return res.status(400).json({
                 ok: false,
-                mensaje: 'Error Cargando Usuario',
+                mensaje: 'Error al Crear Medicos',
                 errors: err
             });
         }
 
-        res.status(201).json({
+        res.status(300).json({
             ok: true,
-            usuario: usuarioguardado,
-            usuariotoken: req.usuario
+            medico: medicoguardado
         });
     });
+
 });
-// ====================================================================
-// FIN CREAR NUEVOS USUARIOS
-// ====================================================================
-
-
 
 //========================================================================
-// ACTUALIZAR USUARIOS
+// ACTUALIZAR 
 //========================================================================
 app.put('/:id', mdauntentic.verificatoken, (req, res) => {
 
     var id = req.params.id;
     var body = req.body;
 
-    Usuario.findById(id, (err, usuario) => {
+    Medico.findById(id, (err, medico) => {
 
         if (err) {
             return res.status(500).json({
                 ok: false,
-                mensaje: 'Error al buscar Usuario',
+                mensaje: 'Error al buscar Hospital',
                 errors: err
 
             });
         }
-        if (!usuario) {
+        if (!medico) {
             return res.status(400).json({
                 ok: false,
-                mensaje: 'El Usuario ' + id + ' no existe',
-                errors: { message: 'no existe el usuario' }
+                mensaje: 'El medico ' + id + ' no existe',
+                errors: { message: 'no existe el medico' }
 
             });
         }
-        usuario.nombre = body.nombre;
-        usuario.email = body.email;
-        usuario.role = body.role;
+        medico.nombre = body.nombre;
+        medico.usuario = req.usuario._id;
+        medico.hospital = body.hospital;
 
-        usuario.save((err, usuarioguardado) => {
+
+        medico.save((err, medicoguardado) => {
 
             if (err) {
                 return res.status(400).json({
                     ok: false,
-                    mensaje: 'Error al actualizar el Usuario',
+                    mensaje: 'Error al actualizar el Medico',
                     errors: err
 
                 });
+
+
             }
 
-            usuarioguardado.password = ';)';
             res.status(200).json({
                 ok: true,
-                usuario: usuarioguardado
+                medico: medicoguardado
             });
 
+            //         usuarioguardado.password = ';)';
+
         });
-
     });
-
 });
+
+
 //========================================================================
 // FIN DE ACTUALIZAR USUARIOS
 //========================================================================
 
 //========================================================================
-// INICIO DE ELIMIAR USUARIOS POT ID
+// INICIO DE ELIMIAR HOSPITAL POT ID
 //========================================================================
 app.delete('/:id', mdauntentic.verificatoken, (req, res) => {
 
     var id = req.params.id;
 
-    Usuario.findByIdAndRemove(id, (err, usuarioBorrado) => {
+    Medico.findByIdAndRemove(id, (err, borrarmedico) => {
         if (err) {
             return res.status(500).json({
                 ok: false,
-                mensaje: 'Error al Borrar Usuario',
+                mensaje: 'Error al Borrar Medico',
                 errors: err
 
             });
         }
 
-        if (!usuarioBorrado) {
+        if (!borrarmedico) {
             return res.status(500).json({
                 ok: false,
-                mensaje: 'No existe el Usuario con ese Id',
-                errors: { message: 'El Usuario no fue Encontrado' }
+                mensaje: 'No existe el Medico con ese Id',
+                errors: { message: 'El Medico no fue Encontrado' }
 
             });
         }
         res.status(200).json({
             ok: true,
-            usuario: usuarioBorrado
+            medico: borrarmedico
         });
 
     });

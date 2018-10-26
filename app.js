@@ -12,9 +12,25 @@ var app = express();
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
 
+
+
+//server index config
+//sirve para mostrar las imagenes de todas las carpetas dendro del directorio ouploads
+//localhost:3000/uploads
+var serveIndex = require('serve-index');
+app.use(express.static(__dirname + '/'))
+app.use('/uploads', serveIndex(__dirname + '/uploads'));
+
+
+
 //Inicializar Rutas
 var appRutas = require('./routes/app');
 var usuarioRutas = require('./routes/usuario');
+var hospitalRutas = require('./routes/hospital');
+var medicoRutas = require('./routes/medico');
+var busquedaRutas = require('./routes/busqueda');
+var uploadRutas = require('./routes/upload');
+var imagenesRutas = require('./routes/imagenes')
 var loginRutas = require('./routes/login');
 
 
@@ -28,8 +44,14 @@ mongoose.connection.openUri('mongodb://localhost:27017/hospitaldb', (err, res) =
 
 // Rutas
 app.use('/usuario', usuarioRutas);
+app.use('/hospital', hospitalRutas);
+app.use('/medico', medicoRutas);
 app.use('/login', loginRutas);
+app.use('/busqueda', busquedaRutas);
+app.use('/upload', uploadRutas);
+app.use('/imagenes', imagenesRutas);
 app.use('/', appRutas);
+
 
 
 // Escuchar peticiones
