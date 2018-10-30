@@ -18,7 +18,8 @@ var usuarioShema = new Schema({
     password: { type: String, required: [true, 'El password es nesesario'] },
     img: { type: String, required: false },
     // con el enum: coloco la validacion correspondiente
-    role: { type: String, required: true, default: 'USER', enum: rolesvalidos }
+    role: { type: String, required: true, default: 'USER', enum: rolesvalidos },
+    google: { type: Boolean, default: false }
 });
 
 // para mandar la variable que se esta validandao se pone entre llaves {} la palabra PATH en mayuscula
